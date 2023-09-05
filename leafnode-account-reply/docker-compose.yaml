@@ -47,7 +47,6 @@ services:
       nats:
         condition: service_healthy
     environment:
-      NATS_ACCOUNT: Responder
       NATS_HOST: ws://responder:secret-responder@nats:8080
     healthcheck:
       # How to do a http request without curl or wget
