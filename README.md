@@ -3,7 +3,8 @@
 ## Leaf node reply across accounts
 
 This works with nats protocol and direct interaction with the server.
-It does not work with replying from a leaf node.
+
+It does not work when replying from a leaf node.
 
 ### Using nats
 
