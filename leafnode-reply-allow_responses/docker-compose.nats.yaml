@@ -1,0 +1,30 @@
+services:
+  responder:
+    build: go-client/
+    depends_on:
+      nats:
+        condition: service_healthy
+    environment:
+      NATS_CLIENT_TYPE: responder
+      NATS_HOST: nats://responder:secret-responder@nats
+      NATS_SUBJECT: things.>
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep client"]
+      interval: 1s
+      timeout: 2s
+      retries: 10
+    networks:
+      nats:
+  requester:
+    build: go-client/
+    depends_on:
+      nats:
+        condition: service_healthy
+      responder:
+        condition: service_healthy
+    environment:
+      NATS_CLIENT_TYPE: requester
+      NATS_HOST: nats://requester:secret-requester@nats
+      NATS_SUBJECT: things.one
+    networks:
+      nats:

@@ -1,0 +1,19 @@
+services:
+  nats:
+    image: bitnami/nats:2.9.21
+    environment:
+      ALLOW_RESPONSES: ${ALLOW_RESPONSES:-true}
+    healthcheck:
+      # How to do a http request without curl or wget
+      test: ["CMD-SHELL", "bash -c 'exec 3<> /dev/tcp/localhost/8222 && echo -e \"GET /healthz HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n\" >&3 && cat <&3 | head -1 | grep -q 200'"]
+      interval: 1s
+      timeout: 2s
+      retries: 20
+    volumes:
+      - ./nats-server.conf:/opt/bitnami/nats/conf/nats-server.conf:ro
+    networks:
+      leafnode:
+      nats:
+networks:
+  nats:
+  leafnode:

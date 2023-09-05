@@ -1,0 +1,48 @@
+services:
+  leafnode:
+    image: bitnami/nats:2.9.21
+    depends_on:
+      nats:
+        condition: service_healthy
+    environment:
+      NATS_HOST: ws://responder:secret-responder@nats:8080
+    healthcheck:
+      # How to do a http request without curl or wget
+      test: ["CMD-SHELL", "bash -c 'exec 3<> /dev/tcp/localhost/8222 && echo -e \"GET /healthz HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n\" >&3 && cat <&3 | head -1 | grep -q 200'"]
+      interval: 1s
+      timeout: 2s
+      retries: 20
+    networks:
+      leafnode:
+      nats:
+    volumes:
+      - ./leafnode.conf:/opt/bitnami/nats/conf/nats-server.conf:ro
+  responder:
+    build: go-client/
+    depends_on:
+      leafnode:
+        condition: service_healthy
+    environment:
+      NATS_CLIENT_TYPE: responder
+      NATS_HOST: nats://leafnode
+      NATS_SUBJECT: things.>
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep client"]
+      interval: 1s
+      timeout: 2s
+      retries: 10
+    networks:
+      leafnode:
+  requester:
+    build: go-client/
+    depends_on:
+      nats:
+        condition: service_healthy
+      responder:
+        condition: service_healthy
+    environment:
+      NATS_CLIENT_TYPE: requester
+      NATS_HOST: nats://requester:secret-requester@nats
+      NATS_SUBJECT: things.one
+    networks:
+      nats:
